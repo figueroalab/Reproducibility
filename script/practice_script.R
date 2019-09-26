@@ -46,13 +46,26 @@ BOM_split_data %>%
 
 BOM_split_data %>% 
   mutate(diff = max-min) %>% #calculate the difference in temp per
-  mutate(avr = mean(diff)) %>% 
+  summarise(avr_temp = mean(diff)) %>% 
   write_csv("BOM_diff_temp.csv")
 
 BOM_diff_temp <-read_csv("BOM_diff_temp.csv") # I will use this file to join by Station_number
 
 #tidy dataframe
-BOM_stations %>% 
-  gather(Station_number, info, )
+BOM_station_tidy <- BOM_stations %>% 
+  gather(Station_number, data, -info) %>% 
+  spread(info, data) %>% 
+  mutate(Station_number = as.numeric(Station_number))
+
+join_BOM <- full_join(BOM_diff_temp, BOM_station_tidy)
+  
+low_state<-join_BOM %>% 
+      group_by(state) %>%
+      summarise(avr_temp_diff = mean(diff)) %>% 
+      arrange(desc(avr_temp_diff)) %>% 
+      tail(n=10)
+
+
+
 
 
